@@ -1,0 +1,55 @@
+{% extends 'base.html' %} {% block title %}Gestión de Departamentos{% endblock
+%} {% block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Gestión de Departamentos</h1>
+
+  <!-- Formulario para agregar departamento -->
+  <form action="/add_departamento" method="POST" class="mt-4">
+    <div class="mb-3">
+      <label for="nombre_departamento" class="form-label"
+        >Nombre del Departamento</label
+      >
+      <input
+        type="text"
+        id="nombre_departamento"
+        name="nombre_departamento"
+        class="form-control"
+        placeholder="Ingrese el nombre del departamento"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar Departamento</button>
+  </form>
+
+  <!-- Tabla para mostrar los departamentos -->
+  <table class="table table-bordered table-striped mt-4">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre del Departamento</th>
+        <th>Opciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for departamento in departamentos %}
+      <tr>
+        <td>{{ departamento.id_departamento }}</td>
+        <td>{{ departamento.nombre_departamento }}</td>
+        <td>
+          <a
+            href="{{ url_for('edit_departamento', id=departamento.id_departamento) }}"
+            class="btn btn-warning btn-sm"
+            >Editar</a
+          >
+          <a
+            href="{{ url_for('delete_departamento', id=departamento.id_departamento) }}"
+            class="btn btn-danger btn-sm"
+            >Eliminar</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
