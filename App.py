@@ -21,7 +21,7 @@ def load_user(id):
 
 @app.route('/')
 def index():
-  return render_template("index.html")
+  return render_template("login.html")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -115,6 +115,116 @@ def delete_departamento(id):
 
     return redirect('/departamentos')
 
+@app.route('/empleados', methods=['GET'])
+def empleados():
+    cursor = db.connection.cursor()  # Usa un cursor estándar
+    cursor.execute("""
+        SELECT e.id_empleado, e.nombre, e.apellido, e.correo, e.telefono, d.nombre_departamento 
+        FROM Empleados e 
+        INNER JOIN Departamentos d ON e.id_departamento = d.id_departamento
+    """)
+    resultados = cursor.fetchall()  # Devuelve los resultados como una lista de tuplas
+    cursor.close()
+
+    empleados = []
+    for row in resultados:
+        empleados.append({
+            'id_empleado': row[0],
+            'nombre': row[1],
+            'apellido': row[2],
+            'correo': row[3],
+            'telefono': row[4],
+            'departamento': row[5],
+        })
+
+    return render_template('empleados.html', empleados=empleados)
+
+@app.route('/add_empleado', methods=['GET', 'POST'])
+def add_empleado():
+    cursor = db.connection.cursor()
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        correo = request.form['correo']
+        telefono = request.form['telefono']
+        id_departamento = request.form['id_departamento']
+
+        try:
+            cursor.execute("""
+                INSERT INTO Empleados (nombre, apellido, correo, telefono, id_departamento)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (nombre, apellido, correo, telefono, id_departamento))
+            db.connection.commit()
+            flash("Empleado agregado exitosamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al agregar el empleado: {e}", "danger")
+        finally:
+            cursor.close()
+        return redirect(url_for('empleados'))
+    
+    # Si el método es GET, obtenemos los departamentos para el formulario
+    cursor.execute("SELECT id_departamento, nombre_departamento FROM Departamentos")
+    departamentos = cursor.fetchall()
+    cursor.close()
+    return render_template('add_empleado.html', departamentos=departamentos)
+
+@app.route('/edit_empleado/<int:id>', methods=['GET', 'POST'])
+def edit_empleado(id):
+    cursor = db.connection.cursor()
+
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        correo = request.form['correo']
+        telefono = request.form['telefono']
+        id_departamento = request.form['id_departamento']
+
+        try:
+            cursor.execute("""
+                UPDATE Empleados 
+                SET nombre=%s, apellido=%s, correo=%s, telefono=%s, id_departamento=%s 
+                WHERE id_empleado=%s
+            """, (nombre, apellido, correo, telefono, id_departamento, id))
+            db.connection.commit()
+            flash("Empleado actualizado exitosamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al actualizar el empleado: {e}", "danger")
+        finally:
+            cursor.close()
+        return redirect(url_for('empleados'))
+
+    # Si es una solicitud GET, obtenemos los datos actuales del empleado
+    cursor.execute("SELECT * FROM Empleados WHERE id_empleado = %s", (id,))
+    empleado = cursor.fetchone()
+
+    # Obtener los departamentos para la selección
+    cursor.execute("SELECT id_departamento, nombre_departamento FROM Departamentos")
+    departamentos = cursor.fetchall()
+    cursor.close()
+
+    if not empleado:
+        flash("Empleado no encontrado", "warning")
+        return redirect(url_for('empleados'))
+
+    return render_template('edit_empleado.html', empleado=empleado, departamentos=departamentos)
+
+@app.route('/delete_empleado/<int:id>', methods=['GET','POST'])
+def delete_empleado(id):
+    cursor = db.connection.cursor()
+    try:
+        # Eliminar empleado por su ID
+        cursor.execute("DELETE FROM Empleados WHERE id_empleado = %s", (id,))
+        db.connection.commit()
+        flash("Empleado eliminado exitosamente", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al eliminar el empleado: {e}", "danger")
+    finally:
+        cursor.close()
+    return redirect(url_for('empleados'))
 
 if __name__=='__main__':
   app.config.from_object(config["development"])

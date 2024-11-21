@@ -1,0 +1,73 @@
+{% extends 'base.html' %} {% block title %}Gestión de Empleados{% endblock %} {%
+block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Gestión de Empleados</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="alert-container">
+    {% for category, message in messages %}
+    <div
+      class="alert alert-{{ category }} alert-dismissible fade show"
+      role="alert"
+    >
+      <strong>{{ message }}</strong>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+  <div class="text-center mt-4">
+    <a href="{{ url_for('home') }}" class="btn btn-secondary mb-4"
+      >Volver al Inicio</a
+    >
+  </div>
+  <!-- Botón para agregar empleado -->
+  <a href="{{ url_for('add_empleado') }}" class="btn btn-primary mb-3"
+    >Agregar Empleado</a
+  >
+
+  <!-- Tabla para mostrar empleados -->
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Correo</th>
+        <th>Teléfono</th>
+        <th>Departamento</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for empleado in empleados %}
+      <tr>
+        <td>{{ empleado.id_empleado }}</td>
+        <td>{{ empleado.nombre }}</td>
+        <td>{{ empleado.apellido }}</td>
+        <td>{{ empleado.correo }}</td>
+        <td>{{ empleado.telefono }}</td>
+        <td>{{ empleado.departamento }}</td>
+        <td>
+          <a
+            href="{{ url_for('edit_empleado', id=empleado.id_empleado) }}"
+            class="btn btn-warning btn-sm"
+            >Editar</a
+          >
+          <a
+            href="{{ url_for('delete_empleado', id=empleado.id_empleado) }}"
+            class="btn btn-danger btn-sm"
+            >Eliminar</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

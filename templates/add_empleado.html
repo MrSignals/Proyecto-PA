@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block title %}Agregar Empleado{% endblock %} {%
+block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Agregar Empleado</h1>
+  <form action="{{ url_for('add_empleado') }}" method="POST">
+    <div class="mb-3">
+      <label for="nombre" class="form-label">Nombre</label>
+      <input
+        type="text"
+        id="nombre"
+        name="nombre"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="apellido" class="form-label">Apellido</label>
+      <input
+        type="text"
+        id="apellido"
+        name="apellido"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="correo" class="form-label">Correo</label>
+      <input
+        type="email"
+        id="correo"
+        name="correo"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="telefono" class="form-label">Teléfono</label>
+      <input
+        type="text"
+        id="telefono"
+        name="telefono"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="id_departamento" class="form-label">Departamento</label>
+      <select
+        id="id_departamento"
+        name="id_departamento"
+        class="form-select"
+        required
+      >
+        {% for departamento in departamentos %}
+        <option value="{{ departamento[0] }}">{{ departamento[1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar</button>
+    <a href="{{ url_for('empleados') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
