@@ -225,6 +225,82 @@ def delete_empleado(id):
     finally:
         cursor.close()
     return redirect(url_for('empleados'))
+ 
+ 
+@app.route('/proyectos', methods=['GET'])
+def proyectos():
+    cursor = db.connection.cursor()  # Usa un cursor estándar
+    cursor.execute("SELECT * FROM proyectos")
+    resultados = cursor.fetchall()  # Devuelve los resultados como una lista de tuplas
+    cursor.close()
+
+    proyectos = []
+    for row in resultados:
+        proyectos.append({
+            'id_proyecto': row[0], 
+            'nombre_proyecto': row[1],
+            'fecha_inicio' : row[2]
+        })
+    
+    return render_template('proyectos.html', proyectos=proyectos)
+
+
+@app.route('/add_proyectos', methods=['POST'])
+def add_proyecto():
+    nombre_proyecto = request.form['nombre_proyecto']
+    fecha_inicio = request.form['fecha_inicio']
+
+    cursor = db.connection.cursor()  # Usamos db.connection para crear el cursor
+    try:
+        cursor.execute("INSERT INTO proyectos (nombre_proyecto, fecha_inicio) VALUES (%s, %s)", (nombre_proyecto, fecha_inicio))
+
+        db.connection.commit()  # Usamos db.connection.commit() en lugar de db.commit()
+        flash("Proyecto agregado exitosamente", "success")
+    except Exception as e:
+        db.connection.rollback()  # Usamos db.connection.rollback() en lugar de db.rollback()
+        flash(f"Error al agregar el proyecto: {e}", "danger")
+    finally:
+        cursor.close()
+    return redirect('/proyectos')
+  
+@app.route('/edit_proyectos/<int:id>', methods=['GET', 'POST'])
+def edit_proyectos(id):
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM proyectos WHERE id_proyecto = %s", (id,))
+    proyectos = cursor.fetchone()
+    cursor.close()
+
+    if request.method == 'POST':
+        nuevo_nombre = request.form['nombre_proyecto']
+        nueva_fecha = request.form['fecha_inicio']
+        cursor = db.connection.cursor()
+        try:
+            cursor.execute("UPDATE proyectos SET nombre_proyecto = %s, fecha_inicio = %s WHERE id_proyecto = %s", (nuevo_nombre, nueva_fecha, id, ))
+            db.connection.commit()
+            flash("Proyecto actualizado exitosamente", "success")
+            return redirect('/proyectos')
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al actualizar el proyecto: {e}", "danger")
+        finally:
+            cursor.close()
+    
+    return render_template('edit_proyectos.html', proyectos=proyectos)
+  
+@app.route('/delete_proyecto/<int:id>', methods=['GET'])
+def delete_proyecto(id):
+    cursor = db.connection.cursor()
+    try:
+        cursor.execute("DELETE FROM proyectos WHERE id_proyecto = %s", (id,))
+        db.connection.commit()
+        flash("Proyecto eliminado exitosamente", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al eliminar el proyecto: {e}", "danger")
+    finally:
+        cursor.close()
+
+    return redirect('/proyectos')
 
 if __name__=='__main__':
   app.config.from_object(config["development"])

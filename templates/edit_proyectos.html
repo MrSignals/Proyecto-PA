@@ -1,0 +1,44 @@
+{% extends 'base.html' %} {% block title %}Editar proyecto{% endblock %} {%
+    block body %}
+    <div class="container mt-4">
+      <h1 class="text-center">Editar proyecto</h1>
+    
+      <form
+        action="{{ url_for('edit_proyectos', id=proyectos.id_proyecto) }}"
+        method="POST"
+        class="mt-4"
+      >
+        <div class="mb-3">
+          <label for="nombre_proyecto" class="form-label"
+            >Nombre del proyecto</label
+          >
+          <input
+            type="text"
+            id="nombre_proyecto"
+            name="nombre_proyecto"
+            class="form-control"
+            value="{{ proyectos.nombre_proyecto }}"
+            required
+          />
+          <label for="nombre_proyecto" class="form-label mt-2"
+            >Fecha de Inicio</label
+          >
+          <input
+            type="date"
+            id="fecha_inicio"
+            name="fecha_inicio"
+            class="form-control"
+            value="{{ proyectos.fecha_inicio }}"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Actualizar proyecto
+        </button>
+        <a href="{{ url_for('proyectos') }}" class="btn btn-secondary"
+          >Cancelar</a
+        >
+      </form>
+    </div>
+    {% endblock %}
+    
