@@ -1,0 +1,33 @@
+{% extends 'base.html' %} {% block title %}Editar Salario{% endblock %} {%
+    block body %}
+    <div class="container mt-4">
+      <h1 class="text-center">Editar Salario</h1>
+    
+      <form
+        action="{{ url_for('edit_salarios', id=salarios.id_salarios) }}"
+        method="POST"
+        class="mt-4"
+      >
+        <div class="mb-3">
+          <label for="salario" class="form-label"
+            >Salario nuevo</label
+          >
+          <input
+            type="text"
+            id="salario"
+            name="salario"
+            class="form-control"
+            value="{{ salario.nombre_salario }}"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Actualizar Salario
+        </button>
+        <a href="{{ url_for('salarios') }}" class="btn btn-secondary"
+          >Cancelar</a
+        >
+      </form>
+    </div>
+    {% endblock %}
+    

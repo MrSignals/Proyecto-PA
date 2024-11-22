@@ -1,33 +1,100 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
+{% block title %}Gestión de Salarios{% endblock %} 
+{% block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Gestión de Salarios</h1>
+  <div class="text-center mt-4">
+    <a href="{{ url_for('home') }}" class="btn btn-secondary mb-4">Volver al Inicio</a>
+  </div>
+  <h2>Registro de salario</h2>
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="alert-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+      <strong>{{ message }}</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  
+  <!-- Formulario para agregar salario -->
+  <form action="/add_salarios" method="POST" class="mt-4">
+    <div class="mb-3">
+      <select id="id_empleado" name="id_empleado" class="form-control" required>
+        <option value="" selected disabled>Seleccione un empleado</option>
+        {% for empleados in empleados %}
+        <option value="{{ empleado[0] }}">{{ empleado[0] }} - {{ empleado[1] }}</option>
+        {% endfor %}
+    </select>
+<!--
+      <label for="id_empleado" class="form-label">ID del Empleado</label>
+      <input
+        type="number"
+        id="id_empleado"
+        name="id_empleado"
+        class="form-control"
+        placeholder="Ingrese el ID del empleado"
+        required
+      />
+      -->
+      <label for="salario" class="form-label">Salario</label>
+      <input
+        type="number"
+        id="salario"
+        name="salario"
+        class="form-control"
+        placeholder="Ingrese el salario"
+        step="0.01"
+        required
+      />
+      <label for="fecha_pago" class="form-label">Fecha de Pago</label>
+      <input
+        type="date"
+        id="fecha_pago"
+        name="fecha_pago"
+        class="form-control"
+        placeholder="Seleccione la fecha de pago"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar Salario</button>
+  </form>
 
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Salarios de empleados</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    {%block body%}
-    <header>
-      <h1>De aqui ya no se que hacer</h1>
-      <nav>
-        <ul>
-          <li><a href="/dfds">Inicio</a></li>
-          <li><a href="/about">Acerca de</a></li>
-          <li><a href="ht">Contacto</a></li>
-        </ul>
-      </nav>
-    </header>
-
-    <main>
-      <p>Se supone que aqui va algo</p>
-    </main>
-
-    <footer>
-      <p>AQUI VA EL CRUD DE SALARIOS PRROS VIVA EL ENCEBOLADO DE DOLAR</p>
-    </footer>
-    {%endblock%}
-  </body>
-</html>
+  <!-- Tabla para mostrar los salarios -->
+  <table class="table table-bordered table-striped mt-4">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ID del Empleado</th>
+        <th>Salario</th>
+        <th>Fecha de Pago</th>
+        <th>Opciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for salario in salarios %}
+      <tr>
+        <td>{{ salario.id_salario }}</td>
+        <td>{{ salario.id_empleado }}</td>
+        <td>{{ salario.salario }}</td>
+        <td>{{ salario.fecha_pago }}</td>
+        <td>
+          <a
+            href="{{ url_for('edit_salarios', id=salario.id_salario) }}"
+            class="btn btn-warning btn-sm"
+            >Editar</a>
+          <a
+            href="{{ url_for('delete_salario', id=salario.id_salario) }}"
+            class="btn btn-danger btn-sm"
+            >Eliminar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
