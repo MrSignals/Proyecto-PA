@@ -302,92 +302,147 @@ def delete_proyecto(id):
 
     return redirect('/proyectos')
 
-#Apartado para salarios.... !!!!BORRAR EN CASO DE EMERGENCIA
-@app.route('/salarios', methods=['GET'])
+@app.route('/salarios', methods=['GET', 'POST'])
 def salario():
-    cursor = db.connection.cursor()  # Usa un cursor estándar
-    cursor.execute("SELECT * FROM salarios")
-    resultados = cursor.fetchall()  # Devuelve los resultados como una lista de tuplas
-    cursor.close()
+    cursor = db.connection.cursor()
+
+    if request.method == 'POST':
+        # Procesar el formulario para agregar un salario
+        id_empleado = request.form['id_empleado']
+        salario = request.form['salario']
+        fecha_pago = request.form['fecha_pago']
+
+        try:
+            cursor.execute("""
+                INSERT INTO Salarios (id_empleado, salario, fecha_pago)
+                VALUES (%s, %s, %s)
+            """, (id_empleado, salario, fecha_pago))
+            db.connection.commit()
+            flash("Salario agregado exitosamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al agregar el salario: {e}", "danger")
+        finally:
+            cursor.close()
+
+    # Recuperar los empleados para mostrarlos en el combo box
+    try:
+        cursor.execute("SELECT id_empleado, nombre FROM Empleados")
+        empleados = cursor.fetchall()  # Devuelve una lista de tuplas con (id_empleado, nombre)
+    except Exception as e:
+        flash(f"Error al obtener empleados: {e}", "danger")
+        empleados = []  # Si ocurre un error, aseguramos que empleados sea una lista vacía
+
+    # Obtener los salarios con los nombres de los empleados
+    try:
+        cursor.execute("""
+            SELECT Salarios.id_salario, Empleados.nombre, Salarios.salario, Salarios.fecha_pago
+            FROM Salarios
+            JOIN Empleados ON Salarios.id_empleado = Empleados.id_empleado
+        """)
+        resultados = cursor.fetchall()  # Devuelve los resultados de los salarios con los nombres de empleados
+    except Exception as e:
+        flash(f"Error al obtener salarios: {e}", "danger")
+        resultados = []  # Si ocurre un error, aseguramos que resultados sea una lista vacía
 
     salarios = []
     for row in resultados:
-        proyectos.append({
-            'id_salario': row[0], 
-            'id_empleado': row[1],
-            'salario' : row[2],
+        salarios.append({
+            'id_salario': row[0],
+            'nombre_empleado': row[1],  # El nombre del empleado
+            'salario': row[2],
             'fecha_pago': row[3]
         })
-    
-    return render_template('salarios.html', salarios=salarios)
+
+    cursor.close()
+
+    return render_template('salarios.html', salarios=salarios, empleados=empleados)
 
 
-@app.route('/add_salarios', methods=['POST'])
+@app.route('/add_salarios', methods=['GET', 'POST'])
 def add_salario():
-    '''id_salario = request.form['id_salario']#AUTOINCREMENTO
-    id_empleado = request.form['id_empleado']#CLAVE FORANEA
-    salario = request.form['salario']
-    fecha_pago = request.form['fecha_pago']'''
-  
-    cursor = db.connection.cursor()  # Usamos db.connection para crear el cursor
-     #################### EDITAR SI ES NECESARIO
-    cursor.execute("SELECT id_empleado, nombre FROM Empleados")##seleccionar los empleados para el combobox
-    empleados = cursor.fetchall()  # Lista de empleados (id_empleado, nombre)
-    print('HOLLAAAAAAA')
-    print(salarios)
-    ####################################
+    cursor = db.connection.cursor()
+
     if request.method == 'POST':
-        id_empleado = request.form['id_empleado']  # ID seleccionado en el combobox
+        # Procesar el formulario para agregar un salario
+        id_empleado = request.form['id_empleado']
         salario = request.form['salario']
         fecha_pago = request.form['fecha_pago']
-        
-        # Insertar el nuevo salario en la base de datos
-        cursor.execute("""
-            INSERT INTO Salarios (id_empleado, salario, fecha_pago)
-            VALUES (%s, %s, %s)
-        """, (id_empleado, salario, fecha_pago))
-        db.connection.commit()
-        flash('Salario agregado exitosamente', 'success')
-        return redirect('/salarios')
-    
-    return render_template('salarios.html', salarios=salarios)
-    '''
-    try:# SE ELIMINA id salario ya que es una variable de incremento
-        cursor.execute("INSERT INTO salarios (id_empleado, salario, fecha_pago) VALUES (%s, %s, %s)", (id_salario, id_empleado, salario, fecha_pago))
 
-        db.connection.commit()  # Usamos db.connection.commit() en lugar de db.commit()
-        flash("Salario agregado exitosamente", "success")
-    except Exception as e:
-        db.connection.rollback()  # Usamos db.connection.rollback() en lugar de db.rollback()
-        flash(f"Error al agregar el salario: {e}", "danger")
-    finally:
+        try:
+            cursor.execute("""
+                INSERT INTO Salarios (id_empleado, salario, fecha_pago)
+                VALUES (%s, %s, %s)
+            """, (id_empleado, salario, fecha_pago))
+            db.connection.commit()
+            flash("Salario agregado exitosamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al agregar el salario: {e}", "danger")
+        finally:
+            cursor.close()
+        
+        return redirect(url_for('salario'))  # Redirige a la misma página para mostrar los salarios
+
+    else:
+        # Si el método es GET, obtenemos los empleados para el formulario
+        try:
+            cursor.execute("SELECT id_empleado, nombre FROM Empleados")
+            empleados = cursor.fetchall()  # Devuelve una lista de tuplas con (id_empleado, nombre)
+        except Exception as e:
+            flash(f"Error al obtener empleados: {e}", "danger")
+            empleados = []  # Si ocurre un error, aseguramos que empleados sea una lista vacía
+
+        # Obtener los salarios para la tabla
+        cursor.execute("SELECT * FROM Salarios")
+        resultados = cursor.fetchall()  # Devuelve los resultados de los salarios
+        salarios = []
+        for row in resultados:
+            salarios.append({
+                'id_salario': row[0], 
+                'id_empleado': row[1],
+                'salario': row[2],
+                'fecha_pago': row[3]
+            })
+        
         cursor.close()
-    return redirect('/salarios')
-'''
+
+        return render_template('add_salario.html', empleados=empleados, salarios=salarios)
+
   
 @app.route('/edit_salarios/<int:id>', methods=['GET', 'POST'])
 def edit_salarios(id):
     cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT * FROM salarios WHERE id_salario = %s", (id,))
+    
+    # Obtener los datos del salario a editar
+    cursor.execute("SELECT * FROM Salarios WHERE id_salario = %s", (id,))
     salarios = cursor.fetchone()
     cursor.close()
 
+    # Si es un POST (cuando el formulario es enviado)
     if request.method == 'POST':
-        ##nuevo_empleado = request.form['id_empleado']
+        # Obtener los nuevos valores del formulario
         nuevo_salario = request.form['salario']
-        nuevo_fecha_pago = request.form['fecha_pago']
+        nueva_fecha_pago = request.form['fecha_pago']
+
+        # Actualizar el salario en la base de datos
         cursor = db.connection.cursor()
-        try:  
-            cursor.execute("UPDATE salarios SET salario = %s, fecha_pago = %s WHERE id_proyecto = %s", (nuevo_salario,nuevo_fecha_pago, id,))
+        try:
+            cursor.execute("""
+                UPDATE Salarios 
+                SET salario = %s, fecha_pago = %s 
+                WHERE id_salario = %s
+            """, (nuevo_salario, nueva_fecha_pago, id))
             db.connection.commit()
-            flash("salario actualizado exitosamente", "success")
-            return redirect('/salarios')
+            flash("Salario actualizado exitosamente", "success")
+            return redirect('/salarios')  # Redirige a la página de salarios
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al actualizar el salario: {e}", "danger")
         finally:
             cursor.close()
-    
+
+    # Si es un GET, mostramos el formulario de edición con los datos actuales
     return render_template('edit_salarios.html', salarios=salarios)
   
 @app.route('/delete_salarios/<int:id>', methods=['GET'])
@@ -396,7 +451,7 @@ def delete_salario(id):
     try:
         cursor.execute("DELETE FROM salarios WHERE id_salario = %s", (id,))
         db.connection.commit()
-        flash("salario eliminado exitosamente", "success")
+        flash("Salario eliminado exitosamente", "success")
     except Exception as e:
         db.connection.rollback()
         flash(f"Error al eliminar el salario: {e}", "danger")
