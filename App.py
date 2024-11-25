@@ -41,9 +41,71 @@ def login():
   else:
     return render_template('login.html')
 
-@app.route("/home")
+@app.route('/home', methods=['GET'])
 def home():
-  return render_template("index.html")
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Consulta base con WHERE 1=1 para facilitar los filtros
+    query = """
+        SELECT 
+            e.nombre AS nombre_empleado,
+            d.nombre_departamento AS nombre_departamento,
+            p.nombre_proyecto AS nombre_proyecto,
+            s.salario AS salario,
+            t.fecha_asignacion AS fecha_asignacion,
+            t.descripcion AS descripcion
+        FROM 
+            Empleados e
+        LEFT JOIN 
+            Departamentos d ON e.id_departamento = d.id_departamento
+        LEFT JOIN 
+            Salarios s ON e.id_empleado = s.id_empleado
+        LEFT JOIN 
+            Tareas t ON e.id_empleado = t.id_empleado
+        LEFT JOIN 
+            Proyectos p ON t.id_proyecto = p.id_proyecto
+        WHERE 1=1
+    """
+    filters = []
+    args = []
+
+    # Filtros dinámicos
+    departamento_id = request.args.get('departamento')
+    if departamento_id:
+        query += " AND d.id_departamento = %s"
+        args.append(departamento_id)
+
+    proyecto_id = request.args.get('proyecto')
+    if proyecto_id:
+        query += " AND p.id_proyecto = %s"
+        args.append(proyecto_id)
+
+    salario_min = request.args.get('salario')
+    if salario_min:
+        query += " AND s.salario >= %s"
+        args.append(salario_min)
+
+    # Ejecutar consulta con filtros
+    cursor.execute(query, args)
+    resultados = cursor.fetchall()
+
+    # Consultas para los filtros
+    cursor.execute("SELECT id_departamento, nombre_departamento FROM Departamentos")
+    departamentos = cursor.fetchall()
+
+    cursor.execute("SELECT id_proyecto, nombre_proyecto FROM Proyectos")
+    proyectos = cursor.fetchall()
+
+    cursor.close()
+
+    # Renderizar la plantilla con datos
+    return render_template(
+        'index.html',
+        resultados=resultados,
+        departamentos=departamentos,
+        proyectos=proyectos
+    )
+
 
 @app.route('/departamentos', methods=['GET'])
 def departamentos():
@@ -459,7 +521,107 @@ def delete_salario(id):
         cursor.close()
 
     return redirect('/salarios') 
-####termino de salarios
+
+@app.route('/tareas', methods=['GET', 'POST'])
+def tareas():
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    if request.method == 'POST':
+        # Capturar los datos del formulario
+        descripcion = request.form['descripcion']
+        id_empleado = request.form['id_empleado']
+        id_proyecto = request.form['id_proyecto']
+        fecha_asignacion = request.form['fecha_asignacion']
+
+        try:
+            cursor.execute("""
+                INSERT INTO Tareas (descripcion, id_empleado, id_proyecto, fecha_asignacion)
+                VALUES (%s, %s, %s, %s)
+            """, (descripcion, id_empleado, id_proyecto, fecha_asignacion))
+            db.connection.commit()
+            flash("Tarea agregada exitosamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al agregar tarea: {e}", "danger")
+        finally:
+            cursor.close()
+            return redirect('/tareas')
+    
+    # Obtener la lista de tareas
+    cursor.execute("""
+        SELECT 
+            t.id_tarea, t.descripcion, t.fecha_asignacion,
+            e.nombre AS empleado_nombre, 
+            p.nombre_proyecto AS proyecto_nombre
+        FROM Tareas t
+        JOIN Empleados e ON t.id_empleado = e.id_empleado
+        JOIN Proyectos p ON t.id_proyecto = p.id_proyecto
+    """)
+    tareas = cursor.fetchall()
+    
+    # Obtener empleados y proyectos para el formulario
+    cursor.execute("SELECT id_empleado, nombre FROM Empleados")
+    empleados = cursor.fetchall()
+    cursor.execute("SELECT id_proyecto, nombre_proyecto FROM Proyectos")
+    proyectos = cursor.fetchall()
+    
+    cursor.close()
+    return render_template('tareas.html', tareas=tareas, empleados=empleados, proyectos=proyectos)
+
+@app.route('/edit_tarea/<int:id>', methods=['GET', 'POST'])
+def edit_tarea(id):
+    cursor = db.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Obtener la tarea actual
+    cursor.execute("SELECT * FROM Tareas WHERE id_tarea = %s", (id,))
+    tarea = cursor.fetchone()
+    
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        nueva_descripcion = request.form['descripcion']
+        nuevo_empleado = request.form['id_empleado']
+        nuevo_proyecto = request.form['id_proyecto']
+        nueva_fecha = request.form['fecha_asignacion']
+
+        try:
+            cursor.execute("""
+                UPDATE Tareas
+                SET descripcion = %s, id_empleado = %s, id_proyecto = %s, fecha_asignacion = %s
+                WHERE id_tarea = %s
+            """, (nueva_descripcion, nuevo_empleado, nuevo_proyecto, nueva_fecha, id))
+            db.connection.commit()
+            flash("Tarea actualizada exitosamente", "success")
+            return redirect('/tareas')
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al actualizar la tarea: {e}", "danger")
+        finally:
+            cursor.close()
+    
+    # Obtener empleados y proyectos para el formulario
+    cursor.execute("SELECT id_empleado, nombre FROM Empleados")
+    empleados = cursor.fetchall()
+    cursor.execute("SELECT id_proyecto, nombre_proyecto FROM Proyectos")
+    proyectos = cursor.fetchall()
+    
+    cursor.close()
+    return render_template('edit_tarea.html', tarea=tarea, empleados=empleados, proyectos=proyectos)
+
+@app.route('/delete_tarea/<int:id>', methods=['GET'])
+def delete_tarea(id):
+    cursor = db.connection.cursor()
+    try:
+        cursor.execute("DELETE FROM Tareas WHERE id_tarea = %s", (id,))
+        db.connection.commit()
+        flash("Tarea eliminada exitosamente", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al eliminar la tarea: {e}", "danger")
+    finally:
+        cursor.close()
+    return redirect('/tareas')
+
+
 
 if __name__=='__main__':
   app.config.from_object(config["development"])

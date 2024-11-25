@@ -40,6 +40,11 @@ body%}
             >Gestión de Salarios</a
           >
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('tareas') }}"
+            >Gestión de Tareas</a
+          >
+        </li>
       </ul>
     </div>
   </div>
@@ -51,6 +56,75 @@ body%}
   <p class="text-center">
     Selecciona una opción del menú para comenzar a gestionar los recursos.
   </p>
+  <div class="container mt-4">
+    <h1 class="text-center">Resumen General</h1>
+    
+    <!-- Filtros -->
+    <form method="GET" action="{{ url_for('home') }}" class="mb-4">
+      <div class="row">
+        <div class="col-md-4">
+          <label for="departamento" class="form-label">Filtrar por Departamento</label>
+          <select id="departamento" name="departamento" class="form-select">
+            <option value="">Todos</option>
+            {% for departamento in departamentos %}
+            <option value="{{ departamento.id_departamento }}" 
+              {% if request.args.get('departamento') == departamento.id_departamento|string %}selected{% endif %}>
+              {{ departamento.nombre_departamento }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="proyecto" class="form-label">Filtrar por Proyecto</label>
+          <select id="proyecto" name="proyecto" class="form-select">
+            <option value="">Todos</option>
+            {% for proyecto in proyectos %}
+            <option value="{{ proyecto.id_proyecto }}" 
+              {% if request.args.get('proyecto') == proyecto.id_proyecto|string %}selected{% endif %}>
+              {{ proyecto.nombre_proyecto }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="salario" class="form-label">Filtrar por Salario (Mayor a)</label>
+          <input
+            type="number"
+            id="salario"
+            name="salario"
+            class="form-control"
+            value="{{ request.args.get('salario', '') }}"
+          />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
+    </form>
+  
+    <!-- Tabla de datos -->
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Departamento</th>
+          <th>Proyecto</th>
+          <th>Salario</th>
+          <th>Fecha de Asignación</th>
+          <th>Tarea</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in resultados %}
+        <tr>
+          <td>{{ item.nombre_empleado }}</td>
+          <td>{{ item.nombre_departamento }}</td>
+          <td>{{ item.nombre_proyecto }}</td>
+          <td>{{ item.salario }}</td>
+          <td>{{ item.fecha_asignacion }}</td>
+          <td>{{ item.descripcion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 </div>
 
 {% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Editar Tarea{% endblock %}
+{% block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Editar Tarea</h1>
+
+  <!-- Formulario para editar tarea -->
+  <form method="POST" class="mt-4">
+    <div class="mb-3">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <input
+        type="text"
+        id="descripcion"
+        name="descripcion"
+        class="form-control"
+        value="{{ tarea.descripcion }}"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="id_empleado" class="form-label">Empleado</label>
+      <select id="id_empleado" name="id_empleado" class="form-control" required>
+        {% for empleado in empleados %}
+          <option 
+            value="{{ empleado.id_empleado }}" 
+            {% if empleado.id_empleado == tarea.id_empleado %} selected {% endif %}
+          >
+            {{ empleado.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="id_proyecto" class="form-label">Proyecto</label>
+      <select id="id_proyecto" name="id_proyecto" class="form-control" required>
+        {% for proyecto in proyectos %}
+          <option 
+            value="{{ proyecto.id_proyecto }}" 
+            {% if proyecto.id_proyecto == tarea.id_proyecto %} selected {% endif %}
+          >
+            {{ proyecto.nombre_proyecto }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="fecha_asignacion" class="form-label">Fecha de Asignación</label>
+      <input
+        type="date"
+        id="fecha_asignacion"
+        name="fecha_asignacion"
+        class="form-control"
+        value="{{ tarea.fecha_asignacion }}"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Actualizar Tarea</button>
+    <a href="{{ url_for('tareas') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

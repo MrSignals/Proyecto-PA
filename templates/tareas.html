@@ -1,0 +1,112 @@
+{% extends 'base.html' %} {% block title %}Tareas{% endblock %} {% block body %}
+<div class="container mt-4">
+  <h1 class="text-center">Gestión de Tareas</h1>
+  <div class="text-center mt-4">
+    <a href="{{ url_for('home') }}" class="btn btn-secondary mb-4"
+      >Volver al Inicio</a
+    >
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="alert-container">
+    {% for category, message in messages %}
+    <div
+      class="alert alert-{{ category }} alert-dismissible fade show"
+      role="alert"
+    >
+      <strong>{{ message }}</strong>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+  <!-- Formulario para agregar tareas -->
+  <form method="POST" class="mt-4">
+    <div class="mb-3">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <input
+        type="text"
+        id="descripcion"
+        name="descripcion"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="id_empleado" class="form-label">Empleado</label>
+      <select id="id_empleado" name="id_empleado" class="form-control" required>
+        {% for empleado in empleados %}
+        <option value="{{ empleado.id_empleado }}">
+          {{ empleado.nombre }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="id_proyecto" class="form-label">Proyecto</label>
+      <select id="id_proyecto" name="id_proyecto" class="form-control" required>
+        {% for proyecto in proyectos %}
+        <option value="{{ proyecto.id_proyecto }}">
+          {{ proyecto.nombre_proyecto }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="fecha_asignacion" class="form-label"
+        >Fecha de Asignación</label
+      >
+      <input
+        type="date"
+        id="fecha_asignacion"
+        name="fecha_asignacion"
+        class="form-control"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar Tarea</button>
+  </form>
+
+  <!-- Tabla de tareas -->
+  <table class="table table-bordered table-striped mt-4">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Descripción</th>
+        <th>Empleado</th>
+        <th>Proyecto</th>
+        <th>Fecha de Asignación</th>
+        <th>Opciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tarea in tareas %}
+      <tr>
+        <td>{{ tarea.id_tarea }}</td>
+        <td>{{ tarea.descripcion }}</td>
+        <td>{{ tarea.empleado_nombre }}</td>
+        <td>{{ tarea.proyecto_nombre }}</td>
+        <td>{{ tarea.fecha_asignacion }}</td>
+        <td>
+          <a
+            href="{{ url_for('edit_tarea', id=tarea.id_tarea) }}"
+            class="btn btn-warning btn-sm"
+            >Editar</a
+          >
+          <a
+            href="{{ url_for('delete_tarea', id=tarea.id_tarea) }}"
+            class="btn btn-danger btn-sm"
+            >Eliminar</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
